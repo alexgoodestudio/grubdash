@@ -19,13 +19,9 @@ function hasBody(req, res, next) {
 
 //middleware to find corresponding dishId
 function dishExists(req, res, next) {
-    // console.log("dishExist!!!!!!!!!!!!!!!!!!!!!!!")
     const dishId = Number(req.params.dishId);
-    // console.log( dishId ,"dishId")
-    // console.log("dishes:--)", dishes)
 
     const foundDish = dishes.find(dish => Number(dish.id) === dishId);
-    // console.log(foundDish, "I'm Found!")
     if (foundDish) {
         res.locals.dish = foundDish;
         return next()
@@ -52,9 +48,7 @@ function dishExists(req, res, next) {
     }
 
     function validatePrice(req, res, next) {
-        console.log("validatePrice","121212121212121212121212121")
         const { price } = req.body.data;
-        console.log(price,"$$$$$$$$$$$$$$$$$$$$$$")
         if (price <= 0 || typeof(price)!=="number") {
           next({
             status: 400,
@@ -67,7 +61,6 @@ function dishExists(req, res, next) {
 
 // handler to list all dishes
         function list(req, res, next){
-            console.log("list")
             res.json({
                 data: dishes,
             })
@@ -75,9 +68,7 @@ function dishExists(req, res, next) {
 
 //handler to create new dishes
     function create(req, res, next){
-        console.log("create")
         const newDish = req.body.data;
-        console.log("newDish", newDish)
         newDish.id = nextId();
         dishes.push(newDish)
         res.status(201).json({ data: newDish })
@@ -86,7 +77,6 @@ function dishExists(req, res, next) {
 
 //handler to list
 const read = (req, res, next) => {
-    // console.log({data:res.locals.dish},"read","*****************************")
     res.status(200).send({data:res.locals.dish})
 };
       

@@ -3,6 +3,7 @@ const methodNotAllowed = require("../errors/methodNotAllowed");
 const controller = require("./dishes.controller")
 
 router
+//remember that the base path is set in app
     .route("/") 
     .get(controller.list)
     .post(controller.create)
