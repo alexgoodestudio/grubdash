@@ -4,20 +4,18 @@ const dishes = require(path.resolve("src/data/dishes-data"));
 const nextId = require("../utils/nextId");
 
 //middleware- destructure data | save body to res.locals for update handler
-function hasBody(req, res, next){
-    const {
-        data: { body } ={}
-      } = req.body;
-      
-      if (body) {
-        res.locals.body = body;
+function hasBody(req, res, next) {
+    const { data } = req.body;
+
+    if (data) {
+        res.locals.body = data;
         return next();
-      }
-      next({
+    }
+    next({
         status: 400,
         message: `No body: ${JSON.stringify(req.body)}`,
-      });
-    }
+    });
+}
 
 //middleware to find corresponding dishId
 function dishExists(req, res, next) {
@@ -56,6 +54,7 @@ function dishExists(req, res, next) {
     function validatePrice(req, res, next) {
         console.log("validatePrice","121212121212121212121212121")
         const { price } = req.body.data;
+        console.log(price,"$$$$$$$$$$$$$$$$$$$$$$")
         if (price <= 0 || typeof(price)!=="number") {
           next({
             status: 400,
@@ -94,16 +93,22 @@ const read = (req, res, next) => {
 
 //handler to update dish
 const update = (req, res, next) => {
-    console.log(dish, "aiaiaiaiiaiai")
-    const { name, description, price, image_url } = req.body.dish;
+    const dish = res.locals.dish; 
+    const { name, description, price, image_url } = res.locals.body; 
+
+    // Update the dish properties
+    dish.name = name;
     dish.description = description;
     dish.price = price;
     dish.image_url = image_url;
-    dish.name = name;
+
     res.status(200).json({
       data: dish,
     });
-  };
+    return next({
+        status: 404
+    })
+};
 
     module.exports ={
         list,
