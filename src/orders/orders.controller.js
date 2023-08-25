@@ -8,20 +8,6 @@ const orders = require(path.resolve("src/data/orders-data"));
 // Use this function to assigh ID's when necessary
 const nextId = require("../utils/nextId");
 
-//middleware- destructure data | save body to res.locals for update handler
-// function hasBody(req, res, next) {
-//     const { data } = req.body;
-//     console.log("HASBODY")
-//     if (data) {
-//         res.locals.body = data;
-//         return next();
-//     }
-//     next({
-//         status: 400,
-//         message: `No body: ${JSON.stringify(req.body)}`,
-//     });
-// }
-
 //request params on the order and calidate that it has a matching order.id
 function orderExists(req, res, next){
 const orderId = Number(req.params.orderId);
@@ -52,28 +38,11 @@ function validateProperties(req, res, next){
     return next()
 }
 
-
-//other validations for "dishes" | array is empty ( "Order must include at least one dish" )| property is not an array ("Order must include at least one dish") | 
-
-// function validateDishes(req, res, next){
-//     const dishes = req.body.data.dishes;
-//     console.log("I made it to ValidateDishes",dishes)
-//     if(!dishes){
-//         return next({
-//         status:400, 
-//         message: "Order must include at least one dish",
-//         })
-//     }
-//     next()
-// }
-
-//validation for "quantity" |  a dish quantity property is missing  ("Dish ${index} must have a quantity") | a dish quantity property is zero or less ("Dish ${index} must have a quantity that is an integer greater than 0") | a dish quantity property is not an integer("Dish ${index} must have a quantity")
-
 function validateDishQuantity(req, res, next) {
     const dishes = req.body.data.dishes;
 
-    if (!Array.isArray(dishes) ) {
-         next({
+    if (!Array.isArray(dishes) || dishes.length === 0 ) {
+        return next({
             status: 400,
             message: "Order must include at least one dish"
         });
@@ -81,6 +50,7 @@ function validateDishQuantity(req, res, next) {
 
     for (let i = 0; i < dishes.length; i++) {
         const dish = dishes[i];
+
         if (!dish.quantity || typeof dish.quantity !== 'number' || dish.quantity <= 0) {
             return next({
                 status: 400,
