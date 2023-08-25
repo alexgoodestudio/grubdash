@@ -9,34 +9,34 @@ const orders = require(path.resolve("src/data/orders-data"));
 const nextId = require("../utils/nextId");
 
 //middleware- destructure data | save body to res.locals for update handler
-function hasBody(req, res, next) {
-    const { data } = req.body;
-
-    if (data) {
-        res.locals.body = data;
-        return next();
-    }
-    next({
-        status: 400,
-        message: `No body: ${JSON.stringify(req.body)}`,
-    });
-}
+// function hasBody(req, res, next) {
+//     const { data } = req.body;
+//     console.log("HASBODY")
+//     if (data) {
+//         res.locals.body = data;
+//         return next();
+//     }
+//     next({
+//         status: 400,
+//         message: `No body: ${JSON.stringify(req.body)}`,
+//     });
+// }
 
 //request params on the order and calidate that it has a matching order.id
 function orderExists(req, res, next){
 const orderId = Number(req.params.orderId);
-const orderFound = orders.find(order => Number(order.id === orderId))
+const orderFound = orders.find(order => Number(order.id === orderId.toString()))
 // console.log("THE ORDER EXISTS")
 if(orderFound){
     res.locals.order= orderFound;
-    return next()
+    next()
+    }else{
+    next({
+        status: 404,
+        message:`Order id not found ${orderId}`
+        })
+    }
 }
-next({
-    status: 404,
-    message:`Order id not found ${req.params.orderId}`
-    })
-}
-
 //validation for "deliverTo" "mobileNumber" "dishes"  | empty or missing string | "Order must include a deliverTo"
 
 function validateProperties(req, res, next){
@@ -45,7 +45,7 @@ function validateProperties(req, res, next){
             if(!req.body.data[keys]) {
                 next({
                     status:400,
-                    message:`Must include a ${keys}`
+                    message:`Order must include a ${keys}`
                 })
             }
         }
@@ -55,24 +55,25 @@ function validateProperties(req, res, next){
 
 //other validations for "dishes" | array is empty ( "Order must include at least one dish" )| property is not an array ("Order must include at least one dish") | 
 
-function validateDishes(req, res, next){
-    const data = req.body.data;
-    if(data === [] || data === ""){
-        return next({
-        status:400, 
-        message: "Order must include at least one dish"
-        })
-    }
-    next()
-}
+// function validateDishes(req, res, next){
+//     const dishes = req.body.data.dishes;
+//     console.log("I made it to ValidateDishes",dishes)
+//     if(!dishes){
+//         return next({
+//         status:400, 
+//         message: "Order must include at least one dish",
+//         })
+//     }
+//     next()
+// }
 
 //validation for "quantity" |  a dish quantity property is missing  ("Dish ${index} must have a quantity") | a dish quantity property is zero or less ("Dish ${index} must have a quantity that is an integer greater than 0") | a dish quantity property is not an integer("Dish ${index} must have a quantity")
 
 function validateDishQuantity(req, res, next) {
     const dishes = req.body.data.dishes;
 
-    if (!Array.isArray(dishes)) {
-        return next({
+    if (!Array.isArray(dishes) ) {
+         next({
             status: 400,
             message: "Order must include at least one dish"
         });
@@ -111,9 +112,9 @@ function validateId(req, res, next) {
 
 //update val: status property is missing or empty("Order must have a status of pending, preparing, out-for-delivery, delivered")
 function validateStatus(req, res, next) {
+    
     const status = req.body.data.status;
     const validStatuses = ["pending", "preparing", "out-for-delivery", "delivered"];
-
     if (!status || !validStatuses.includes(status)) {
         return next({
             status: 400,
@@ -126,7 +127,7 @@ function validateStatus(req, res, next) {
 
 function noDelete(req, res, next) {
     const order = res.locals.order;
-
+    // console.log("I got to noDelete, last middleware before update")
     if (order.status === "delivered") {
         return next({
             status: 400,
@@ -148,7 +149,6 @@ function deletePendingStatus(req, res, next) {
     }
     next();
 }
-
 
 // handler for list
 
@@ -194,7 +194,6 @@ function update(req, res, next) {
     res.json({ data: order });
 }
 
-
 // handler for delete
 
 const destroy = (req, res, next)=>{
@@ -205,12 +204,11 @@ const destroy = (req, res, next)=>{
 
   module.exports = {
     list,
-    create: [validateDishQuantity, validateDishes, validateProperties, create],
+    create: [validateDishQuantity, validateProperties, create],
     read: [orderExists, read],
-    update: [validateDishQuantity, orderExists, validateProperties, validateDishes, hasBody, validateStatus, noDelete, validateId, update],
+    update: [validateDishQuantity, orderExists, validateProperties, validateStatus, noDelete, validateId, update],
     delete: [orderExists, deletePendingStatus, destroy],
 }
 
 
 
-//

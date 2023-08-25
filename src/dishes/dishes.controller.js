@@ -6,7 +6,7 @@ const nextId = require("../utils/nextId");
 //middleware- destructure data | save body to res.locals for update handler
 function hasBody(req, res, next) {
     const { data } = req.body;
-
+    // console.log(data,"hasBody")
     if (data) {
         res.locals.body = data;
         return next();
@@ -16,12 +16,27 @@ function hasBody(req, res, next) {
         message: `No body: ${JSON.stringify(req.body)}`,
     });
 }
+//validation for param = req.body.id //call next with 400 status
+function validateMatching(req,res, next){
+    if(req.body.data.id === req.params.dishId){
+        next()
+      }else if(!req.body.data.id){
+        next()
+      }else{
+        next({
+          status:400,
+          message:`Dish id does not match route id. Dish: ${req.body.data.id}, Route: ${req.params.dishId}`
+        })
+      }
+    }
+
 
 //middleware to find corresponding dishId
 function dishExists(req, res, next) {
     const dishId = Number(req.params.dishId);
-
+    // console.log("dishExists",dishId)
     const foundDish = dishes.find(dish => Number(dish.id) === dishId);
+    // console.log(foundDish)
     if (foundDish) {
         res.locals.dish = foundDish;
         return next()
@@ -49,6 +64,7 @@ function dishExists(req, res, next) {
 
     function validatePrice(req, res, next) {
         const { price } = req.body.data;
+        // console.log(price,"ValidatePrice~")
         if (price <= 0 || typeof(price)!=="number") {
           next({
             status: 400,
@@ -83,6 +99,7 @@ const read = (req, res, next) => {
 
 //handler to update dish
 const update = (req, res, next) => {
+    // console.log("update", res.locals)
     const dish = res.locals.dish; 
     const { name, description, price, image_url } = res.locals.body; 
 
@@ -104,7 +121,7 @@ const update = (req, res, next) => {
         list,
         create:[validateProperties,validatePrice, create],
         read:[dishExists,read],
-        update:[dishExists,validateProperties, hasBody, validatePrice,  update], 
+        update:[dishExists,hasBody,validateProperties, validatePrice,validateMatching, update], 
     }
 
     //----------------------------------------------------------------------
